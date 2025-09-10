@@ -13,9 +13,7 @@ export class HelpCommand extends CommandMessage {
   async execute(args: string[], message: ChannelMessage) {
     const { currentMessage } = await this.getChannelMessage(message);
 
-    const allCommands = CommandStorage.getAllCommands();
-
-    const messageContent = 'Utility - Help Menu';
+    const messageContent = 'Help Menu';
     const messageSent = await currentMessage?.reply({
       t: messageContent,
       mk: [{ type: EMarkdownType.PRE, s: 0, e: messageContent.length }],
