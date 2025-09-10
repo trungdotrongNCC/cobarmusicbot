@@ -5,13 +5,11 @@ import { MezonClientService } from 'src/mezon/client.service';
 
 import { messagesBusy } from '../constants/text';
 import { BOT_ID } from '../constants/config';
+import { CommandBase } from '../base/command.handle';
 
 @Injectable()
 export class ChannelMessageEventHandler {
-  private client: MezonClient;
-  constructor(private clientService: MezonClientService) {
-    this.client = clientService.getClient();
-  }
+  constructor(private commandBase: CommandBase) {}
 
   getRandomMessage(): string {
     const randomIndex = Math.floor(Math.random() * messagesBusy.length);
@@ -21,24 +19,17 @@ export class ChannelMessageEventHandler {
   @OnEvent(Events.ChannelMessage)
   async handleMessage(message: ChannelMessage) {
     try {
-      // Ignore messages from the bot itself
-      if (message.sender_id && message.sender_id === BOT_ID) {
-        return;
+      const content = message.content.t;
+      if (typeof content == 'string' && content.trim()) {
+        const firstLetter = content.trim()[0];
+        switch (firstLetter) {
+          case '*':
+            await this.commandBase.execute(content, message);
+            break;
+          default:
+            return;
+        }
       }
-      // reply mentioned only
-      if ((!message.mentions || !message.mentions.length) && message.mentions?.findIndex(m => m.user_id == BOT_ID?.toString()) === -1) {
-        return;
-      }
-
-      this.client.channels
-        .fetch(message.channel_id)
-        .then((channel) => {
-          channel.messages.fetch(message.id).then((msg) => {
-            msg.reply({
-              t: this.getRandomMessage(),  
-            })  
-          })
-        })
     } catch (error) {
       console.log(error);
     }

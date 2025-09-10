@@ -28,7 +28,7 @@
     "@types/joi": "^17.2.3",
     "dotenv": "^16.5.0",
     "joi": "^17.13.3",
-    "mezon-sdk": "^2.7.98",
+    "mezon-sdk": "^2.8.12",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1"
   },
@@ -42,6 +42,7 @@
     "@swc/core": "^1.10.7",
     "@types/express": "^5.0.0",
     "@types/jest": "^29.5.14",
+    "@types/minimatch": "^5.1.2",
     "@types/node": "^22.10.7",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
