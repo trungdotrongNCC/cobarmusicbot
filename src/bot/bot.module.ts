@@ -4,10 +4,21 @@ import { BotGateway } from './events/bot.gateway';
 import { HelpCommand } from './commands/help/help.command';
 import { Module } from '@nestjs/common/decorators/modules';
 import { CommandBase } from './base/command.handle';
+import { EmbebCommand } from './commands/embed/embed.command';
+import { PlayMediaCommand } from './commands/playMedia/playMedia.command';
+import { EmbebSecondCommand } from './commands/embed2/embed-second.command';
 
 @Module({
   imports: [DiscoveryModule],
-  providers: [BotGateway, ChannelMessageEventHandler, CommandBase, HelpCommand],
+  providers: [
+    BotGateway,
+    ChannelMessageEventHandler,
+    CommandBase,
+    HelpCommand,
+    EmbebCommand,
+    PlayMediaCommand,
+    EmbebSecondCommand
+  ],
   controllers: [],
 })
 export class BotModule {}

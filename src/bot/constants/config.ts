@@ -46,6 +46,7 @@ export interface EmbedProps {
     inline?: boolean;
     options?: any[];
     inputs?: {};
+    max_options?: number
   }>;
   image?: { url: string; width: string; height: string };
   timestamp?: string;
