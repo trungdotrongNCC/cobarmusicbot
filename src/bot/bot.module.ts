@@ -7,6 +7,7 @@ import { CommandBase } from './base/command.handle';
 import { EmbebCommand } from './commands/embed/embed.command';
 import { PlayMediaCommand } from './commands/playMedia/playMedia.command';
 import { EmbebSecondCommand } from './commands/embed2/embed-second.command';
+import { TokenSentEventHandler } from './handlers/tokensend.handle';
 
 @Module({
   imports: [DiscoveryModule],
@@ -17,7 +18,8 @@ import { EmbebSecondCommand } from './commands/embed2/embed-second.command';
     HelpCommand,
     EmbebCommand,
     PlayMediaCommand,
-    EmbebSecondCommand
+    EmbebSecondCommand,
+    TokenSentEventHandler,
   ],
   controllers: [],
 })
