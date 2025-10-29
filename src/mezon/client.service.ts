@@ -8,7 +8,7 @@ export class MezonClientService {
   private client: MezonClient;
 
   constructor(clientConfigs: MezonClientConfig) {
-    this.client = new MezonClient(clientConfigs.token);
+    this.client = new MezonClient({ botId: clientConfigs.bot_id!, token: clientConfigs.token});
   }
 
   async initializeClient() {
