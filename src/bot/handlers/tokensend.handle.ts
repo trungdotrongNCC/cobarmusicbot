@@ -3,93 +3,104 @@ import { Events, TokenSentEvent } from 'mezon-sdk';
 import { Injectable, Logger } from '@nestjs/common';
 import { MezonClientService } from '../../mezon/client.service';
 
-
 @Injectable()
 export class TokenSentEventHandler {
   private readonly logger = new Logger(TokenSentEventHandler.name);
   private readonly musicWebhookUrl = process.env.MUSIC_WEBHOOK_URL;
-  private client 
+  private readonly client: any;
+
   constructor(mezonClientService: MezonClientService) {
+    // ✅ Luôn khởi tạo client
+    this.client = mezonClientService.getClient();
+
     if (!this.musicWebhookUrl) {
       this.logger.warn('[INIT] MUSIC_WEBHOOK_URL is not set in .env');
-      this.client = mezonClientService.getClient();
     }
   }
 
   @OnEvent(Events.TokenSend)
-async handleRecharge(tokenEvent: TokenSentEvent) {
-  console.log('Received TokenSend event:', tokenEvent);
-  const amount = Number(tokenEvent.amount) || 0;
-  if (amount <= 0) {
-    this.logger.warn(`[TokenSend] Ignore amount <= 0: ${tokenEvent.amount}`);
-    return;
-  }
+  async handleRecharge(tokenEvent: TokenSentEvent) {
+    console.log('Received TokenSend event:', tokenEvent);
+    const amount = Number(tokenEvent.amount) || 0;
 
-  const sessionId = this.extractSessionId(tokenEvent.note);
-  if (!sessionId) {
-    this.logger.warn(
-      `[TokenSend] Missing session_id in note: ${tokenEvent.note ?? ''}`,
-    );
-    return;
-  }
-
-  if (!this.musicWebhookUrl) {
-    this.logger.error('[TokenSend] MUSIC_WEBHOOK_URL not defined');
-    return;
-  }
-
-  const body = {
-    event_type: 'success',
-    amount,
-    metadata: {
-      session_id: sessionId,
-    },
-  };
-
-  try {
-    const res = await fetch(this.musicWebhookUrl, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-
-    if (res.ok) {
-      this.logger.log(
-        `[TokenSend] Sent callback to music webhook. session_id=${sessionId}, amount=${amount}`,
+    // ⚠️ Tránh gửi ngược loop khi bot là người gửi token
+    if (tokenEvent.sender_id === process.env.BOT_ID) {
+      this.logger.warn(
+        `[TokenSend] Skip self-triggered event from bot_id=${process.env.BOT_ID}`,
       );
-
-  
-      const userId = "1831893028516663296"; 
-      const money = amount; 
-      const dataSendToken = {
-        receiver_id: userId,
-        amount: money,
-      };
-
-      try {
-        await this.client.sendToken(dataSendToken);
-        this.logger.log(
-          `[TokenSend] Successfully sent token to user ${userId} with amount ${money}`,
-        );
-      } catch (err: any) {
-        this.logger.error(`[TokenSend] Failed to send token`, {
-          error: err?.message || err,
-        });
-      }
-
-
-    } else {
-      const text = await res.text().catch(() => '');
-      this.logger.error(
-        `[TokenSend] Webhook responded with HTTP ${res.status}: ${text}`,
-      );
+      return;
     }
-  } catch (err: any) {
-    this.logger.error(`[TokenSend] Failed to call webhook`, {
-      error: err?.message || err,
-    });
+
+    if (amount <= 0) {
+      this.logger.warn(`[TokenSend] Ignore amount <= 0: ${tokenEvent.amount}`);
+      return;
+    }
+
+    const sessionId = this.extractSessionId(tokenEvent.note);
+    if (!sessionId) {
+      this.logger.warn(
+        `[TokenSend] Missing session_id in note: ${tokenEvent.note ?? ''}`,
+      );
+      return;
+    }
+
+    if (!this.musicWebhookUrl) {
+      this.logger.error('[TokenSend] MUSIC_WEBHOOK_URL not defined');
+      return;
+    }
+
+    const body = {
+      event_type: 'success',
+      amount,
+      metadata: {
+        session_id: sessionId,
+      },
+    };
+
+    try {
+      const res = await fetch(this.musicWebhookUrl, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      if (res.ok) {
+        this.logger.log(
+          `[TokenSend] Sent callback to music webhook. session_id=${sessionId}, amount=${amount}`,
+        );
+
+        // === Gửi token sau khi webhook OK ===
+        const userId = '1831893028516663296'; // TODO: thay bằng logic thật
+        const money = amount;
+        const dataSendToken = {
+          receiver_id: userId,
+          amount: money,
+        };
+
+        try {
+          await this.client.sendToken(dataSendToken);
+          this.logger.log(
+            `[TokenSend] Successfully sent token to user ${userId} with amount ${money}`,
+          );
+        } catch (err: any) {
+          this.logger.error(`[TokenSend] Failed to send token`, {
+            error: err?.message || err,
+          });
+        }
+
+        // === Kết thúc đoạn gửi token ===
+      } else {
+        const text = await res.text().catch(() => '');
+        this.logger.error(
+          `[TokenSend] Webhook responded with HTTP ${res.status}: ${text}`,
+        );
+      }
+    } catch (err: any) {
+      this.logger.error(`[TokenSend] Failed to call webhook`, {
+        error: err?.message || err,
+      });
+    }
   }
-}
 
   /** Bóc session_id từ note */
   private extractSessionId(note?: string | null): string | null {
