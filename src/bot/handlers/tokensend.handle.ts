@@ -10,7 +10,7 @@ export class TokenSentEventHandler {
   private readonly client: any;
 
   constructor(mezonClientService: MezonClientService) {
-    // ✅ Luôn khởi tạo client
+  
     this.client = mezonClientService.getClient();
 
     if (!this.musicWebhookUrl) {
